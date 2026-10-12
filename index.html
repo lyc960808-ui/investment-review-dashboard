@@ -3,18 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-@media (max-width: 720px){
-  .monthly-charts { grid-template-columns: 1fr; }
-  .cards { grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); }
-  section { padding: 14px 12px; }
-  main { padding: 0 12px 30px; }
-  header { padding: 14px 16px; }
-  table { font-size: 12px; }
-  th, td { padding: 6px 6px; }
-  .summary-box { font-size: 12.5px; }
-}
-</style>
 <title>投资工作台 · 年度复盘</title>
 <style>
   :root { --dark:#1F2A44; --accent:#4A90D9; --green:#2E9E5B; --red:#D9534F; --grey:#8A94A6; --bg:#F2F5F9; }
@@ -70,6 +58,18 @@
   .bar-label { position:absolute; top:50%; transform:translateY(-50%); font-size:11px; color:#fff; padding:0 6px; white-space:nowrap; }
   .bar-label.out { color:var(--dark); }
   [data-tip] { cursor:default; }
+</style>
+<style>
+@media (max-width: 720px){
+  .monthly-charts { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); }
+  section { padding: 14px 12px; overflow-x: auto; }
+  main { padding: 0 12px 30px; }
+  header { padding: 14px 16px; }
+  table { font-size: 12px; }
+  th, td { padding: 6px 6px; }
+  .summary-box { font-size: 12.5px; }
+}
 </style>
 </head>
 <body>
