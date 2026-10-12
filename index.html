@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>投资工作台 · 年度复盘</title>
+<style>
+  :root { --dark:#1F2A44; --accent:#4A90D9; --green:#2E9E5B; --red:#D9534F; --grey:#8A94A6; --bg:#F2F5F9; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--dark); }
+  header { background:var(--dark); color:#fff; padding:18px 28px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  header h1 { font-size:20px; font-weight:600; }
+  header .sub { font-size:12px; color:var(--grey); margin-top:4px; }
+  main { max-width:1180px; margin:24px auto; padding:0 20px 40px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:24px; }
+  .card { background:#fff; border-radius:10px; padding:16px 18px; border-top:3px solid var(--accent); box-shadow:0 1px 3px rgba(31,42,68,.08); }
+  .card .label { font-size:12px; color:var(--grey); }
+  .card .value { font-size:26px; font-weight:700; margin:6px 0 2px; }
+  .card .sub { font-size:11px; color:var(--grey); }
+  .pos { color:var(--green); } .neg { color:var(--red); }
+  section { background:#fff; border-radius:10px; padding:20px 22px; margin-bottom:20px; box-shadow:0 1px 3px rgba(31,42,68,.08); }
+  h2 { font-size:15px; margin-bottom:14px; padding-left:10px; border-left:4px solid var(--accent); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:var(--dark); color:#fff; padding:8px 10px; text-align:left; font-weight:500; white-space:nowrap; }
+  td { padding:8px 10px; border-bottom:1px solid #edf0f5; vertical-align:top; }
+  tr:nth-child(even) td { background:#fafbfd; }
+  .chart-row { display:flex; align-items:center; gap:12px; margin:8px 0; }
+  .chart-name { width:90px; font-size:13px; text-align:right; }
+  .chart-track { flex:1; height:22px; background:#eef1f6; border-radius:4px; position:relative; }
+  .chart-bar { height:100%; border-radius:4px; background:var(--green); min-width:2px; }
+  .chart-bar.neg { background:var(--red); }
+  .chart-label { width:70px; font-size:12px; color:var(--grey); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:#eef1f6; color:var(--dark); }
+  .badge.bad { background:#FDECEA; color:var(--red); font-weight:600; }
+  .badge.good { background:#E8F6EE; color:var(--green); }
+  .masked-tag { font-size:11px; color:var(--grey); }
+  .monthly-toolbar { display:flex; align-items:center; gap:16px; margin-bottom:14px; font-size:13px; }
+  .monthly-toolbar select { padding:5px 10px; border:1px solid #d4dae4; border-radius:6px; font-size:13px; background:#fff; }
+  .monthly-charts { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px; }
+  .chart-box { background:#fafbfd; border:1px solid #edf0f5; border-radius:8px; padding:14px 16px; }
+  .chart-title { font-size:13px; font-weight:600; margin-bottom:8px; }
+  .summary-box { background:#eef4fb; border-left:4px solid var(--accent); border-radius:6px; padding:10px 14px; font-size:13px; line-height:1.8; margin-bottom:14px; }
+  #tbl-month tr.clickable { cursor:pointer; }
+  #tbl-month tr.clickable:hover td { background:#eaf1fb; }
+  #tbl-month tr.open td { font-weight:600; background:#eaf1fb; }
+  .acct-block { margin:8px 0 12px; }
+  .acct-title { font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--dark); }
+  table.sub { font-size:12px; }
+  table.sub th { font-size:11.5px; }
+  .muted { color:var(--grey); }
+  .small { font-size:12px; margin-top:8px; }
+  footer { text-align:center; font-size:12px; color:var(--grey); padding:10px 0 30px; line-height:1.9; }
+  .bar-wrap { display:flex; align-items:center; gap:8px; margin:6px 0; }
+  .axis { font-size:11px; color:var(--grey); }
+  .bar-area { position:relative; flex:1; height:26px; background:#f4f6fa; border-radius:4px; }
+  .bar { position:absolute; top:3px; bottom:3px; border-radius:3px; background:var(--green); }
+  .bar.neg { background:var(--red); }
+  .bar-label { position:absolute; top:50%; transform:translateY(-50%); font-size:11px; color:#fff; padding:0 6px; white-space:nowrap; }
+  .bar-label.out { color:var(--dark); }
+  [data-tip] { cursor:default; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>投资工作台 · 年度复盘仪表盘</h1>
+    <div class="sub" id="meta"></div>
+  </div>
+  <div><span class="masked-tag">线上版 · 金额已永久脱敏</span></div>
+</header>
+<main>
+  <section id="monthly">
+    <h2>月度盈亏（已实现，扣除手续费）</h2>
+    <div class="monthly-toolbar">
+      <label>年份
+        <select id="year-sel"></select>
+      </label>
+      <span id="cutoff-note" class="muted"></span>
+    </div>
+    <div class="monthly-charts">
+      <div class="chart-box">
+        <div class="chart-title">月度已实现净盈亏（金额已脱敏）</div>
+        <div id="m-chart"></div>
+        <div class="axis">横轴：月份｜柱高按净盈亏比例，标签与悬浮提示均为 ***</div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">年内累计已实现净盈亏（金额已脱敏）</div>
+        <div id="cum-chart"></div>
+        <div class="axis">虚线为零轴｜悬浮提示为累计值（***）；未来月份不绘制</div>
+      </div>
+    </div>
+    <div id="month-summary" class="summary-box"></div>
+    <table id="tbl-month"></table>
+    <div id="month-details"></div>
+    <div class="muted small">口径：仅统计已平仓交易（按平仓日期归月，净盈亏已扣开平仓手续费）；浮盈浮亏与出入金不计入。多账户按「账户+币种」分别统计，不混算。</div>
+  </section>
+
+  <div class="cards" id="cards"></div>
+
+  <section>
+    <h2>已实现盈亏 · 按标的（图表金额已脱敏）</h2>
+    <div id="chart"></div>
+    <div class="axis">横轴：已实现盈亏金额（脱敏）｜悬浮提示与标签均为 ***</div>
+  </section>
+
+  <section><h2>逐笔交易台账</h2><table id="tbl-trades"></table></section>
+  <section><h2>已平仓交易（逐笔配对）</h2><table id="tbl-closed"></table></section>
+  <section><h2>当前持仓</h2><table id="tbl-pos"></table></section>
+  <section><h2>出入金（与收益分离）</h2><table id="tbl-cash"></table></section>
+  <section><h2>投资计划台账</h2><table id="tbl-plans"></table></section>
+  <section><h2>计划 vs 执行偏差</h2><table id="tbl-comp"></table></section>
+</main>
+<footer id="foot"></footer>
+<script src="data.js"></script>
+<script>
+const PUB = window.PUBDATA;
+let DATA = null;
+const M = '***';
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+function signCls(sign){ return sign>0 ? 'pos' : sign<0 ? 'neg' : ''; }
+
+function table(id, cols, rows){
+  const el = document.getElementById(id);
+  el.innerHTML = '<thead><tr>' + cols.map(c=>'<th>'+esc(c)+'</th>').join('') + '</tr></thead><tbody>' +
+    rows.map(r=>'<tr>' + cols.map((c,i)=>{
+      const v = r[c] ?? '';
+      const tip = ' data-tip="'+esc(c)+'：'+esc(v)+'" title="'+esc(c)+'：'+esc(v)+'"';
+      return '<td'+tip+'>'+esc(v)+'</td>';
+    }).join('') + '</tr>').join('') + '</tbody>';
+}
+
+function renderCards(d){
+  const order = ['realized','unrealized','total','cash','net_deposits'];
+  document.getElementById('cards').innerHTML = order.map(k=>{
+    const c = d.cards[k];
+    return '<div class="card"><div class="label">'+esc(c.label)+'</div>' +
+      '<div class="value '+signCls(c.sign)+'">'+esc(c.value)+'</div>' +
+      '<div class="sub">'+esc(c.sub)+'</div></div>';
+  }).join('');
+}
+
+function renderChart(d){
+  const el = document.getElementById('chart');
+  const items = d.chart;
+  el.innerHTML = items.map(i=>{
+    const w = i.h;
+    const neg = i.sign < 0;
+    const label = M;
+    const outside = w < 30;
+    const tip = esc(i.symbol+' 已实现盈亏：'+label);
+    return '<div class="bar-wrap" title="'+tip+'" data-tip="'+tip+'">' +
+      '<div class="chart-name">'+esc(i.symbol)+'</div>' +
+      '<div class="bar-area"><div class="bar '+(neg?'neg':'')+'" style="width:'+w+'%; '+(neg?'right:0;':'left:0;')+'">' +
+      (outside ? '' : '<span class="bar-label">'+esc(label)+'</span>') +
+      '</div>' + (outside && w > 0 ? '<span class="bar-label out" style="'+(neg?'right:calc('+w+'% + 6px);':'left:calc('+w+'% + 6px);')+'">'+esc(label)+'</span>' : '') + '</div>' +
+      '<div class="chart-label">'+esc(label)+'</div></div>';
+  }).join('');
+}
+
+function renderMonthly(d){
+  const mo = d.monthly;
+  document.getElementById('cutoff-note').textContent =
+    '数据截止 ' + mo.cutoff + ' ｜ 仅含已平仓（扣手续费），浮盈浮亏与出入金不计入';
+  const sel = document.getElementById('year-sel');
+  if (sel.options.length !== PUB.years.length){
+    sel.innerHTML = PUB.years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+' 年</option>').join('');
+  }
+  sel.value = String(mo.year);
+  renderMonthChart(mo.month_chart);
+  renderCumChart(mo.cum_chart, mo.cum_zero);
+  document.getElementById('month-summary').innerHTML =
+    '<b>收益分布小结（'+esc(mo.year)+' 年）：</b>' + esc(mo.summary);
+  renderMonthTable(mo);
+}
+
+function renderMonthChart(items){
+  document.getElementById('m-chart').innerHTML = items.map(i=>{
+    const w = i.h;
+    const neg = i.sign < 0;
+    const label = M;
+    const outside = w < 30;
+    const tip = esc(i.label+' 已实现净盈亏：'+label+'（'+i.status_short+'）');
+    return '<div class="bar-wrap" title="'+tip+'" data-tip="'+tip+'">' +
+      '<div class="chart-name">'+esc(i.label)+'</div>' +
+      '<div class="bar-area"><div class="bar '+(neg?'neg':'')+'" style="width:'+w+'%; '+(neg?'right:0;':'left:0;')+'">' +
+      (outside ? '' : '<span class="bar-label">'+esc(label)+'</span>') +
+      '</div>' + (outside && w > 0 ? '<span class="bar-label out" style="'+(neg?'right:calc('+w+'% + 6px);':'left:calc('+w+'% + 6px);')+'">'+esc(label)+'</span>' : '') + '</div>' +
+      '<div class="chart-label">'+esc(i.status_short)+'</div></div>';
+  }).join('');
+}
+
+function renderCumChart(pts, zeroY){
+  const el = document.getElementById('cum-chart');
+  if (!pts.length){ el.innerHTML = '<div class="muted">无数据</div>'; return; }
+  const n = pts.length;
+  const x = i => 5 + i*(90/Math.max(n-1,1));
+  const path = pts.map((p,i)=> (i?'L':'M') + x(i).toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+  el.innerHTML =
+    '<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:170px">' +
+    '<line x1="5" y1="'+zeroY+'" x2="95" y2="'+zeroY+'" stroke="#c8cfda" stroke-width="0.4" stroke-dasharray="2 2"/>' +
+    '<path d="'+path+'" fill="none" stroke="#4A90D9" stroke-width="1"/>' +
+    pts.map((p,i)=> '<circle cx="'+x(i)+'" cy="'+p.y+'" r="1" fill="#4A90D9"><title>'+esc(p.label+' 累计已实现净盈亏：'+p.show)+'</title></circle>').join('') +
+    '</svg><div class="axis">'+pts.map(p=>esc(p.label.replace('月',''))).join(' ')+' 月｜累计值已脱敏</div>';
+}
+
+function monthBadge(m){
+  if (m.status === 'none') return '<span class="badge">无平仓</span>';
+  if (m.status === 'future') return '<span class="badge">尚未发生</span>';
+  if (m.status === 'nodata') return '<span class="badge">数据不足</span>';
+  return m.net_sign > 0 ? '<span class="badge good">盈利</span>' : m.net_sign < 0 ? '<span class="badge bad">亏损</span>' : '<span class="badge">持平</span>';
+}
+
+function renderMonthTable(mo){
+  const groups = mo.groups;
+  const multi = groups.length > 1;
+  const head = ['月份','状态'];
+  groups.forEach(g => head.push((multi ? g.replace('|',' · ')+' ' : '') + '已实现净盈亏'));
+  head.push('股票','看涨期权','平仓笔数');
+  const el = document.getElementById('tbl-month');
+  let html = '<thead><tr>' + head.map(h=>'<th>'+esc(h)+'</th>').join('') + '</tr></thead><tbody>';
+  mo.months.forEach(m => {
+    const clickable = m.count > 0;
+    let cells = ['<td>'+esc(m.label)+'</td>',
+                 '<td>'+monthBadge(m)+(m.note ? ' <span class="muted small" style="margin:0">'+esc(m.note)+'</span>' : '')+'</td>'];
+    groups.forEach(g => cells.push('<td class="'+signCls(m.group_sign ? m.group_sign[g] : 0)+'">'+esc(m.group_net[g] ?? '—')+'</td>'));
+    cells.push('<td>'+esc(m.by_type['股票'])+'</td>',
+               '<td>'+esc(m.by_type['看涨期权'])+'</td>',
+               '<td>'+m.count+'</td>');
+    html += '<tr class="'+(clickable?'clickable':'')+'" data-month="'+m.month+'">' + cells.join('') + '</tr>';
+    html += '<tr class="detail-row" id="detail-'+m.month+'" style="display:none"><td colspan="'+head.length+'">' +
+            (clickable ? renderMonthDetail(m) : '<span class="muted">该月'+esc(m.note || '无平仓')+'</span>') + '</td></tr>';
+  });
+  el.innerHTML = html + '</tbody>';
+  el.querySelectorAll('tr.clickable').forEach(tr => {
+    tr.addEventListener('click', () => {
+      const d = document.getElementById('detail-' + tr.dataset.month);
+      const open = d.style.display !== 'none';
+      d.style.display = open ? 'none' : 'table-row';
+      tr.classList.toggle('open', !open);
+    });
+  });
+}
+
+function renderMonthDetail(m){
+  const cols = ['账户','标的','类型','开仓日期','平仓日期','平仓数量','毛盈亏','手续费','净盈亏'];
+  const blocks = Object.entries(m.by_account).map(([g, ga]) => {
+    const [acct, ccy] = g.split('|');
+    let h = '<div class="acct-block"><div class="acct-title">账户 '+esc(acct)+' · '+esc(ccy)+
+            ' ｜ 净盈亏 <span class="'+signCls(ga.net_sign)+'">'+esc(ga.net)+'</span>'+
+            ' ｜ 手续费 '+esc(ga.fees)+' ｜ '+ga.count+' 笔</div>';
+    h += '<table class="sub"><thead><tr>' + cols.map(c=>'<th>'+esc(c)+'</th>').join('') + '</tr></thead><tbody>';
+    h += ga.pairs.map(p => '<tr>' +
+      '<td>'+esc(p.account)+'</td><td>'+esc(p.symbol)+'</td><td>'+esc(p.type)+'</td>' +
+      '<td>'+esc(p.entry_date)+'</td><td>'+esc(p.exit_date)+'</td>' +
+      '<td>'+esc(p.qty)+'</td><td>'+esc(p.gross)+'</td><td>'+esc(p.fees)+'</td>' +
+      '<td class="'+signCls(p.net_sign)+'">'+esc(p.net)+'</td></tr>').join('');
+    return h + '</tbody></table></div>';
+  });
+  return blocks.join('');
+}
+
+function render(d){
+  document.getElementById('meta').textContent =
+    '账户 ' + d.account + '｜复盘期间 ' + d.period + '｜快照 ' + d.snapshot_date + '｜金额已永久脱敏';
+  renderMonthly(d);
+  renderCards(d);
+  renderChart(d);
+  table('tbl-trades', ['id','date','type','symbol','action','qty','price','fee'], d.trades);
+  table('tbl-closed', ['symbol','type','entry','exit','pnl','holding_days'], d.closed);
+  table('tbl-pos', ['symbol','qty','cost','price','market_value','unrealized_pnl'], d.positions);
+  table('tbl-cash', ['id','date','kind','amount','note'], d.cashflows);
+  table('tbl-plans', ['trade_id','date','thesis','exit_rule','status'], d.plans);
+  table('tbl-comp', ['trade_id','symbol','plan','actual','verdict'], d.compliance);
+  document.getElementById('foot').innerHTML = d.notes.map(n=>'<div>'+esc(n)+'</div>').join('') +
+    '<div>数据快照由投资工作台生成 ｜ 线上版金额已永久脱敏（***）</div>';
+}
+
+function switchYear(y){
+  DATA = PUB.data[String(y)];
+  render(DATA);
+}
+
+document.getElementById('year-sel').addEventListener('change', e => switchYear(e.target.value));
+switchYear(PUB.years[0]);
+</script>
+</body>
+</html>
